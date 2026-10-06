@@ -1,0 +1,308 @@
+{
+  "info": {
+    "name": "Malanco Corp API",
+    "description": "Coleccion de endpoints del backend de Malanco Corp: mensajeria de WhatsApp y mensajeria interna. Configura la variable {{base_url}} y {{token}} (se llena automaticamente tras el login).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:4000/api" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.token) { pm.collectionVariables.set('token', data.token); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@malancocorp.com\",\n  \"password\": \"CambiaEstaPassword123\"\n}"
+            },
+            "url": "{{base_url}}/auth/login"
+          }
+        },
+        {
+          "name": "Perfil actual",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/auth/perfil"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Usuarios (admin)",
+      "item": [
+        {
+          "name": "Listar usuarios",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/usuarios"
+          }
+        },
+        {
+          "name": "Crear usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Juan Perez\",\n  \"email\": \"juan@malancocorp.com\",\n  \"password\": \"password123\",\n  \"rol\": \"agente\",\n  \"maxChatsSimultaneos\": 5\n}"
+            },
+            "url": "{{base_url}}/usuarios"
+          }
+        },
+        {
+          "name": "Actualizar usuario",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}"
+            },
+            "url": "{{base_url}}/usuarios/:id"
+          }
+        },
+        {
+          "name": "Actualizar mi estatus de actividad",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estatusActividad\": \"disponible\"\n}"
+            },
+            "url": "{{base_url}}/usuarios/me/estatus"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Conversaciones",
+      "item": [
+        {
+          "name": "Listar bandeja",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/conversaciones"
+          }
+        },
+        {
+          "name": "Detalle de conversacion",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/conversaciones/:id"
+          }
+        },
+        {
+          "name": "Asignar manualmente",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"agenteId\": \"uuid-del-agente\"\n}" },
+            "url": "{{base_url}}/conversaciones/:id/asignar"
+          }
+        },
+        {
+          "name": "Cambiar estatus / Archivar (solo admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"estatus\": \"archivado\"\n}" },
+            "url": "{{base_url}}/conversaciones/:id/estatus"
+          }
+        },
+        {
+          "name": "Responder (texto y/o archivo)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "texto", "value": "Hola, gracias por tu mensaje", "type": "text" },
+                { "key": "archivo", "type": "file", "src": [] }
+              ]
+            },
+            "url": "{{base_url}}/conversaciones/:id/responder"
+          }
+        },
+        {
+          "name": "Envio de archivo a varios contactos",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "conversacionIds", "value": "[\"uuid1\",\"uuid2\"]", "type": "text" },
+                { "key": "texto", "value": "Promocion de la semana", "type": "text" },
+                { "key": "archivo", "type": "file", "src": [] }
+              ]
+            },
+            "url": "{{base_url}}/conversaciones/envio-masivo"
+          }
+        }
+      ]
+    },
+    {
+      "name": "WhatsApp Webhook",
+      "item": [
+        {
+          "name": "Verificacion (GET, la usa Meta)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=TU_TOKEN&hub.challenge=12345"
+          }
+        },
+        {
+          "name": "Evento entrante simulado (POST)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"entry\": [\n    {\n      \"changes\": [\n        {\n          \"value\": {\n            \"contacts\": [{ \"wa_id\": \"5215500000000\", \"profile\": { \"name\": \"Cliente Ejemplo\" } }],\n            \"messages\": [\n              {\n                \"id\": \"wamid.EJEMPLO123\",\n                \"from\": \"5215500000000\",\n                \"timestamp\": \"1710000000\",\n                \"type\": \"text\",\n                \"text\": { \"body\": \"Hola, necesito ayuda\" }\n              }\n            ]\n          }\n        }\n      ]\n    }\n  ]\n}"
+            },
+            "url": "{{base_url}}/whatsapp/webhook"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mensajeria interna (correo de trabajo)",
+      "item": [
+        {
+          "name": "Enviar mensaje interno",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "destinatarios", "value": "[\"uuid1\",\"uuid2\"]", "type": "text" },
+                { "key": "asunto", "value": "Reporte semanal", "type": "text" },
+                { "key": "cuerpo", "value": "Adjunto el reporte de la semana.", "type": "text" },
+                { "key": "adjuntos", "type": "file", "src": [] }
+              ]
+            },
+            "url": "{{base_url}}/mensajeria-interna"
+          }
+        },
+        {
+          "name": "Bandeja de entrada",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/mensajeria-interna/bandeja-entrada"
+          }
+        },
+        {
+          "name": "Enviados",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/mensajeria-interna/enviados"
+          }
+        },
+        {
+          "name": "Detalle de mensaje",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/mensajeria-interna/:id"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notificaciones",
+      "item": [
+        {
+          "name": "Listar mis notificaciones",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/notificaciones"
+          }
+        },
+        {
+          "name": "Marcar como leida",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/notificaciones/:id/leida"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Configuracion (admin)",
+      "item": [
+        {
+          "name": "Obtener configuracion",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/config"
+          }
+        },
+        {
+          "name": "Actualizar configuracion",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"clave\": \"max_chats_default\",\n  \"valor\": 8\n}" },
+            "url": "{{base_url}}/config"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Estado del servidor",
+          "request": { "method": "GET", "url": "{{base_url}}/health" }
+        }
+      ]
+    }
+  ]
+}
